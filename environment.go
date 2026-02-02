@@ -1,4 +1,4 @@
-package npminstall
+package pnpminstall
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package npminstall
+package pnpminstall
 
 import (
 	"os"
@@ -9,9 +9,9 @@ import (
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
 
-func UpdateNpmCacheLayer(logger scribe.Emitter, workingDir string, cacheLayer packit.Layer) (packit.Layer, error) {
-	npmCachePath := filepath.Join(workingDir, "npm-cache")
-	sum, err := fs.NewChecksumCalculator().Sum(npmCachePath)
+func UpdatePnpmCacheLayer(logger scribe.Emitter, workingDir string, cacheLayer packit.Layer) (packit.Layer, error) {
+	pnpmCachePath := filepath.Join(workingDir, "pnpm-store")
+	sum, err := fs.NewChecksumCalculator().Sum(pnpmCachePath)
 	if err != nil {
 		return packit.Layer{}, err
 	}
@@ -22,7 +22,7 @@ func UpdateNpmCacheLayer(logger scribe.Emitter, workingDir string, cacheLayer pa
 			return packit.Layer{}, err
 		}
 
-		err = fs.Move(npmCachePath, cacheLayer.Path)
+		err = fs.Move(pnpmCachePath, cacheLayer.Path)
 		if err != nil {
 			return packit.Layer{}, err
 		}
@@ -32,7 +32,7 @@ func UpdateNpmCacheLayer(logger scribe.Emitter, workingDir string, cacheLayer pa
 		}
 	} else {
 		logger.Process("Reusing cached layer %s", cacheLayer.Path)
-		err = os.RemoveAll(npmCachePath)
+		err = os.RemoveAll(pnpmCachePath)
 		if err != nil {
 			return packit.Layer{}, err
 		}

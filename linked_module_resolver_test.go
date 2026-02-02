@@ -1,11 +1,11 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	npminstall "github.com/goodrain/pnpm-install"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -16,7 +16,7 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 		Expect = NewWithT(t).Expect
 
 		workspace, layerPath, otherLayerPath, tmpDir string
-		resolver                                     npminstall.LinkedModuleResolver
+		resolver                                     pnpminstall.LinkedModuleResolver
 	)
 
 	it.Before(func() {
@@ -66,7 +66,7 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 		}`), 0600)
 		Expect(err).NotTo(HaveOccurred())
 
-		resolver = npminstall.NewLinkedModuleResolver(npminstall.NewLinker(tmpDir))
+		resolver = pnpminstall.NewLinkedModuleResolver(pnpminstall.NewLinker(tmpDir))
 	})
 
 	it.After(func() {

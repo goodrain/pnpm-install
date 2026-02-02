@@ -1,14 +1,15 @@
 api = "0.7"
 
 [buildpack]
-  homepage = "https://github.com/paketo-buildpacks/npm-install"
-  id = "paketo-buildpacks/npm-install"
-  name = "Paketo Buildpack for NPM Install"
+  homepage = "https://github.com/goodrain/pnpm-install"
+  id = "goodrain/pnpm-install"
+  name = "Rainbond Buildpack for PNPM Install"
+  version = "0.1.0"
   sbom-formats = ["application/vnd.cyclonedx+json", "application/spdx+json", "application/vnd.syft+json"]
 
   [[buildpack.licenses]]
     type = "Apache-2.0"
-    uri = "https://github.com/paketo-buildpacks/npm-install/blob/main/LICENSE"
+    uri = "https://github.com/goodrain/pnpm-install/blob/main/LICENSE"
 
 [metadata]
   include-files = [
@@ -40,8 +41,8 @@ api = "0.7"
     description = "path to the root of the Node.js project"
 
 	[[metadata.configurations]]
-    name = "BP_NPM_VERSION"
-    description = "configures a custom npm version"
+    name = "BP_PNPM_VERSION"
+    description = "configures a custom pnpm version"
 
 	[[metadata.configurations]]
     name = "BP_KEEP_NODE_BUILD_CACHE"
@@ -60,6 +61,11 @@ api = "0.7"
     name = "NPM_CONFIG_LOGLEVEL"
     default = "error"
     description = "configures npm output verbosity"
+
+  [[metadata.configurations]]
+    name = "BP_PNPM_INCLUDE_BUILD_PYTHON"
+    default = "false"
+    description = "include python during the build process for native module compilation"
 
 
 [[stacks]]

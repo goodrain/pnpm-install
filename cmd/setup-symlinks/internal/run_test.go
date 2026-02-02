@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/cmd/setup-symlinks/internal"
+	npminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/cmd/setup-symlinks/internal"
 	"github.com/sclevine/spec"
 	"github.com/sclevine/spec/report"
 
@@ -28,7 +28,7 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 		executablePath string
 		appDir         string
 		tmpDir         string
-		resolver       npminstall.LinkedModuleResolver
+		resolver       pnpminstall.LinkedModuleResolver
 	)
 
 	it.Before(func() {
@@ -62,7 +62,7 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.MkdirAll(filepath.Join(appDir, "module-5"), os.ModePerm)).To(Succeed())
 		Expect(os.WriteFile(filepath.Join(appDir, "module-5", "index.js"), nil, 0400)).To(Succeed())
 
-		resolver = npminstall.NewLinkedModuleResolver(npminstall.NewLinker(tmpDir))
+		resolver = pnpminstall.NewLinkedModuleResolver(pnpminstall.NewLinker(tmpDir))
 		err = os.WriteFile(filepath.Join(appDir, "package-lock.json"), []byte(`{
 			"packages": {
 				"module-1": {

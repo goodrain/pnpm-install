@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -10,8 +10,8 @@ import (
 	"regexp"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	npminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/chronos"
 	"github.com/paketo-buildpacks/packit/v2/sbom"
@@ -114,7 +114,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		symlinkResolver = &fakes.SymlinkResolver{}
 
-		build = npminstall.Build(
+		build = pnpminstall.Build(
 			entryResolver,
 			configurationManager,
 			buildManager,
@@ -270,8 +270,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			}`))
 
 			cacheLayer := result.Layers[1]
-			Expect(cacheLayer.Name).To(Equal(npminstall.LayerNameCache))
-			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(cacheLayer.Name).To(Equal(pnpminstall.LayerNameCache))
+			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(cacheLayer.SharedEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.BuildEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.LaunchEnv).To(Equal(packit.Environment{}))
@@ -287,7 +287,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Expect(buildManager.ResolveCall.Receives.WorkingDir).To(Equal(workingDir))
 
 			Expect(processLayerDir).To(Equal(filepath.Join(layersDir, "build-modules")))
-			Expect(processCacheDir).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(processCacheDir).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(processWorkingDir).To(Equal(workingDir))
 			Expect(processNpmrcPath).To(Equal(""))
 
@@ -437,8 +437,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			}`))
 
 			cacheLayer := result.Layers[1]
-			Expect(cacheLayer.Name).To(Equal(npminstall.LayerNameCache))
-			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(cacheLayer.Name).To(Equal(pnpminstall.LayerNameCache))
+			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(cacheLayer.SharedEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.BuildEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.LaunchEnv).To(Equal(packit.Environment{}))
@@ -456,7 +456,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Expect(pruneProcess.RunCall.CallCount).To(Equal(0))
 
 			Expect(processLayerDir).To(Equal(filepath.Join(layersDir, "launch-modules")))
-			Expect(processCacheDir).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(processCacheDir).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(processWorkingDir).To(Equal(workingDir))
 			Expect(processNpmrcPath).To(Equal(""))
 
@@ -755,8 +755,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			}`))
 
 			cacheLayer := result.Layers[2]
-			Expect(cacheLayer.Name).To(Equal(npminstall.LayerNameCache))
-			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(cacheLayer.Name).To(Equal(pnpminstall.LayerNameCache))
+			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(cacheLayer.SharedEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.BuildEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.LaunchEnv).To(Equal(packit.Environment{}))
@@ -895,7 +895,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Expect(buildManager.ResolveCall.Receives.WorkingDir).To(Equal(filepath.Join(workingDir, "some-dir")))
 
 				Expect(processLayerDir).To(Equal(filepath.Join(layersDir, "launch-modules")))
-				Expect(processCacheDir).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+				Expect(processCacheDir).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 				Expect(processWorkingDir).To(Equal(filepath.Join(workingDir, "some-dir")))
 			})
 		})

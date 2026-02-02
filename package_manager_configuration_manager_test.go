@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	npminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/paketo-buildpacks/packit/v2/servicebindings"
 	"github.com/sclevine/spec"
@@ -22,7 +22,7 @@ func testPackageManagerConfigurationManager(t *testing.T, context spec.G, it spe
 		buffer          *bytes.Buffer
 		bindingResolver *fakes.BindingResolver
 
-		packageManagerConfigurationManager npminstall.PackageManagerConfigurationManager
+		packageManagerConfigurationManager pnpminstall.PackageManagerConfigurationManager
 	)
 
 	it.Before(func() {
@@ -30,7 +30,7 @@ func testPackageManagerConfigurationManager(t *testing.T, context spec.G, it spe
 
 		buffer = bytes.NewBuffer(nil)
 
-		packageManagerConfigurationManager = npminstall.NewPackageManagerConfigurationManager(bindingResolver, scribe.NewEmitter(buffer), "")
+		packageManagerConfigurationManager = pnpminstall.NewPackageManagerConfigurationManager(bindingResolver, scribe.NewEmitter(buffer), "")
 	})
 
 	context("DeterminePath", func() {
@@ -63,7 +63,7 @@ func testPackageManagerConfigurationManager(t *testing.T, context spec.G, it spe
 
 		context("when there is a default path set", func() {
 			it.Before(func() {
-				packageManagerConfigurationManager = npminstall.NewPackageManagerConfigurationManager(bindingResolver, scribe.NewEmitter(buffer), "default-path")
+				packageManagerConfigurationManager = pnpminstall.NewPackageManagerConfigurationManager(bindingResolver, scribe.NewEmitter(buffer), "default-path")
 			})
 
 			it("returns that path", func() {

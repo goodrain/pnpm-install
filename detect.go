@@ -1,4 +1,4 @@
-package npminstall
+package pnpminstall
 
 import (
 	"errors"
@@ -30,6 +30,12 @@ func Detect() packit.DetectFunc {
 			return packit.DetectResult{}, err
 		}
 
+		// Check if pnpm-lock.yaml exists
+		lockfilePath := filepath.Join(projectPath, PnpmLockfile)
+		if _, err := os.Stat(lockfilePath); os.IsNotExist(err) {
+			return packit.DetectResult{}, packit.Fail.WithMessage("no '%s' found in project path %s", PnpmLockfile, projectPath)
+		}
+
 		pkg, err := libnodejs.ParsePackageJSON(projectPath)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
@@ -57,12 +63,12 @@ func Detect() packit.DetectFunc {
 
 		requirements = append(requirements, nodeDependency)
 
-		bpNpmIncludeBuildPython, bpNpmIncludeBuildPythonExists := os.LookupEnv("BP_NPM_INCLUDE_BUILD_PYTHON")
+		bpPnpmIncludeBuildPython, bpPnpmIncludeBuildPythonExists := os.LookupEnv("BP_PNPM_INCLUDE_BUILD_PYTHON")
 
 		installPython := false
-		if bpNpmIncludeBuildPythonExists && (bpNpmIncludeBuildPython == "" || bpNpmIncludeBuildPython == "true") {
+		if bpPnpmIncludeBuildPythonExists && (bpPnpmIncludeBuildPython == "" || bpPnpmIncludeBuildPython == "true") {
 			installPython = true
-		} else if bpNpmIncludeBuildPythonExists && bpNpmIncludeBuildPython == "false" {
+		} else if bpPnpmIncludeBuildPythonExists && bpPnpmIncludeBuildPython == "false" {
 			installPython = false
 		}
 
@@ -76,12 +82,8 @@ func Detect() packit.DetectFunc {
 			})
 		}
 
-		requirements = append(requirements, packit.BuildPlanRequirement{
-			Name: Npm,
-			Metadata: BuildPlanMetadata{
-				Build: true,
-			},
-		})
+		// Note: pnpm will be installed via npm if BP_PNPM_VERSION is set,
+		// or we assume pnpm is available in the build environment
 
 		return packit.DetectResult{
 			Plan: packit.BuildPlan{

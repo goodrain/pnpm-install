@@ -1,11 +1,11 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	npminstall "github.com/goodrain/pnpm-install"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -17,7 +17,7 @@ func testLinker(t *testing.T, context spec.G, it spec.S) {
 	var (
 		sourceDir, targetDir, tmpDir string
 		source, target               string
-		linker                       npminstall.Linker
+		linker                       pnpminstall.Linker
 	)
 
 	it.Before(func() {
@@ -39,7 +39,7 @@ func testLinker(t *testing.T, context spec.G, it spec.S) {
 		tmpDir, err = os.MkdirTemp("", "tmp")
 		Expect(err).NotTo(HaveOccurred())
 
-		linker = npminstall.NewLinker(tmpDir)
+		linker = pnpminstall.NewLinker(tmpDir)
 	})
 
 	it.After(func() {

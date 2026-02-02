@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	npminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
 
@@ -24,7 +24,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 		install *fakes.BuildProcess
 		ci      *fakes.BuildProcess
 
-		resolver npminstall.BuildProcessResolver
+		resolver pnpminstall.BuildProcessResolver
 
 		buffer *bytes.Buffer
 	)
@@ -46,7 +46,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 		ci = &fakes.BuildProcess{}
 		ci.ShouldRunCall.Returns.Sha = "ci-sha"
 
-		resolver = npminstall.NewBuildProcessResolver(logger, rebuild, install, ci)
+		resolver = pnpminstall.NewBuildProcessResolver(logger, rebuild, install, ci)
 	})
 
 	it.After(func() {
@@ -230,7 +230,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("failure cases", func() {
-		var resolver npminstall.BuildProcessResolver
+		var resolver pnpminstall.BuildProcessResolver
 
 		it.Before(func() {
 			var err error
@@ -238,7 +238,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 
 			logger := scribe.NewLogger(bytes.NewBuffer(nil))
-			resolver = npminstall.NewBuildProcessResolver(logger, rebuild, install, ci)
+			resolver = pnpminstall.NewBuildProcessResolver(logger, rebuild, install, ci)
 		})
 
 		it.After(func() {

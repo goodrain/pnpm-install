@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"testing"
@@ -8,10 +8,10 @@ import (
 	"github.com/sclevine/spec/report"
 )
 
-func TestUnitNPMInstall(t *testing.T) {
+func TestUnitPNPMInstall(t *testing.T) {
 	format.MaxLength = 0
 
-	suite := spec.New("npm-install", spec.Report(report.Terminal{}))
+	suite := spec.New("pnpm-install", spec.Report(report.Terminal{}))
 	suite("Build", testBuild)
 	suite("BuildProcessResolver", testBuildProcessResolver)
 	suite("CIBuildProcess", testCIBuildProcess)
@@ -23,6 +23,6 @@ func TestUnitNPMInstall(t *testing.T) {
 	suite("PackageManangerConfigurationManager", testPackageManagerConfigurationManager)
 	suite("PruneBuildProcess", testPruneBuildProcess)
 	suite("RebuildBuildProcess", testRebuildBuildProcess)
-	suite("UpdateNpmCacheLayer", testUpdateNpmCache)
+	suite("UpdatePnpmCacheLayer", testUpdatePnpmCache)
 	suite.Run(t)
 }

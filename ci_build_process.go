@@ -1,4 +1,4 @@
-package npminstall
+package pnpminstall
 
 import (
 	"errors"
@@ -31,12 +31,12 @@ func NewCIBuildProcess(executable Executable, summer Summer, environment Environ
 func (r CIBuildProcess) ShouldRun(workingDir string, metadata map[string]interface{}, npmrcConfig string) (bool, string, error) {
 	cachedNodeVersion, err := cacheExecutableResponse(
 		r.executable,
-		[]string{"get", "user-agent"},
+		[]string{"--version"},
 		workingDir,
 		npmrcConfig,
 		r.logger)
 	if err != nil {
-		return false, "", fmt.Errorf("failed to execute npm get user-agent: %w", err)
+		return false, "", fmt.Errorf("failed to execute pnpm --version: %w", err)
 	}
 	defer func() {
 		if removeErr := os.Remove(cachedNodeVersion); removeErr != nil {
@@ -46,7 +46,7 @@ func (r CIBuildProcess) ShouldRun(workingDir string, metadata map[string]interfa
 
 	sum, err := r.summer.Sum(
 		filepath.Join(workingDir, "package.json"),
-		filepath.Join(workingDir, "package-lock.json"),
+		filepath.Join(workingDir, PnpmLockfile),
 		cachedNodeVersion)
 	if err != nil {
 		return false, "", err
@@ -66,7 +66,15 @@ func (r CIBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath string, 
 		return err
 	}
 
+	// Set up pnpm store directory for caching
+	storeDir := filepath.Join(cacheDir, "store")
+	err = os.MkdirAll(storeDir, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to create pnpm store directory: %w", err)
+	}
+
 	environment := os.Environ()
+	environment = append(environment, fmt.Sprintf("PNPM_HOME=%s", cacheDir))
 
 	if value, ok := r.environment.Lookup("NPM_CONFIG_LOGLEVEL"); ok {
 		environment = append(environment, fmt.Sprintf("NPM_CONFIG_LOGLEVEL=%s", value))
@@ -80,8 +88,10 @@ func (r CIBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath string, 
 		environment = append(environment, "NODE_ENV=development")
 	}
 
-	args := []string{"ci", "--unsafe-perm", "--cache", cacheDir}
-	r.logger.Subprocess("Running 'npm %s'", strings.Join(args, " "))
+	// Use pnpm install with frozen-lockfile (equivalent to npm ci)
+	// Use --reporter=append-only for better CI logging
+	args := []string{"install", "--frozen-lockfile", "--store-dir", storeDir, "--reporter=append-only"}
+	r.logger.Subprocess("Running 'pnpm %s'", strings.Join(args, " "))
 
 	err = r.executable.Execute(pexec.Execution{
 		Args:   args,
@@ -91,7 +101,7 @@ func (r CIBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath string, 
 		Env:    environment,
 	})
 	if err != nil {
-		return fmt.Errorf("npm ci failed: %w", err)
+		return fmt.Errorf("pnpm install failed: %w", err)
 	}
 
 	_, err = os.Stat(filepath.Join(workingDir, "node_modules"))

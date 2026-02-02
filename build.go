@@ -1,10 +1,11 @@
-package npminstall
+package pnpminstall
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -85,10 +86,50 @@ func Build(entryResolver EntryResolver,
 			return packit.BuildResult{}, err
 		}
 
-		npmVersion, found := environment.Lookup("BP_NPM_VERSION")
+		// Determine pnpm version from multiple sources (priority order):
+		// 1. BP_PNPM_VERSION environment variable
+		// 2. packageManager field in package.json (e.g., "pnpm@9.0.0")
+		// 3. Default to "latest"
+		pnpmVersion, found := environment.Lookup("BP_PNPM_VERSION")
+		versionSource := "default"
 		if found {
-			logger.Process("Installling custom npm version %s", npmVersion)
-			args := []string{"install", fmt.Sprintf("npm@%s", npmVersion)}
+			versionSource = "BP_PNPM_VERSION"
+		} else {
+			// Try to read packageManager from package.json
+			packageJSONPath := filepath.Join(projectPath, "package.json")
+			if data, err := os.ReadFile(packageJSONPath); err == nil {
+				var pkg struct {
+					PackageManager string `json:"packageManager"`
+				}
+				if err := json.Unmarshal(data, &pkg); err == nil && pkg.PackageManager != "" {
+					// Parse "pnpm@9.0.0" format
+					re := regexp.MustCompile(`^pnpm@(.+)$`)
+					if matches := re.FindStringSubmatch(pkg.PackageManager); len(matches) == 2 {
+						pnpmVersion = matches[1]
+						versionSource = "package.json"
+					}
+				}
+			}
+			if pnpmVersion == "" {
+				pnpmVersion = "latest"
+			}
+		}
+
+		// Check if pnpm is available
+		pnpmCheck := pexec.NewExecutable("pnpm")
+		err = pnpmCheck.Execute(pexec.Execution{
+			Args:   []string{"--version"},
+			Stdout: logger.ActionWriter,
+			Stderr: logger.ActionWriter,
+		})
+		if err != nil || found {
+			// pnpm not found or user specified a version, install it globally
+			if err != nil {
+				logger.Process("Installing pnpm version %s (source: %s)", pnpmVersion, versionSource)
+			} else {
+				logger.Process("Installing custom pnpm version %s (source: %s)", pnpmVersion, versionSource)
+			}
+			args := []string{"install", "-g", fmt.Sprintf("pnpm@%s", pnpmVersion)}
 			logger.Subprocess("Running 'npm %s'", strings.Join(args, " "))
 
 			err = pexec.NewExecutable("npm").Execute(pexec.Execution{
@@ -98,30 +139,16 @@ func Build(entryResolver EntryResolver,
 				Stderr: logger.ActionWriter,
 			})
 			if err != nil {
-				return packit.BuildResult{}, fmt.Errorf("update of npm failed: %w", err)
-			}
-			moduleBinPath := filepath.Join(projectPath, "node_modules", ".bin")
-			localBinPath := filepath.Join(projectPath, "node_modules", ".bin_local")
-			err = os.Mkdir(localBinPath, os.ModePerm)
-			if err != nil {
-				return packit.BuildResult{}, err
-			}
-			err = os.Link(path.Join(moduleBinPath, "npm"), filepath.Join(localBinPath, "npm"))
-			if err != nil {
-				return packit.BuildResult{}, err
-			}
-			err = os.Setenv("PATH", fmt.Sprintf("%s:%s:%s", filepath.Join(localBinPath), os.Getenv("PATH"), moduleBinPath))
-			if err != nil {
-				return packit.BuildResult{}, err
+				return packit.BuildResult{}, fmt.Errorf("installation of pnpm failed: %w", err)
 			}
 		}
 
-		npmCacheLayer, err := context.Layers.Get(LayerNameCache)
+		pnpmCacheLayer, err := context.Layers.Get(LayerNameCache)
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
 
-		npmCacheLayer.Cache = true
+		pnpmCacheLayer.Cache = true
 
 		process, cacheFound, err := buildManager.Resolve(projectPath)
 		if err != nil {
@@ -129,7 +156,7 @@ func Build(entryResolver EntryResolver,
 		}
 
 		if cacheFound {
-			npmCacheLayer, err = UpdateNpmCacheLayer(logger, projectPath, npmCacheLayer)
+			pnpmCacheLayer, err = UpdatePnpmCacheLayer(logger, projectPath, pnpmCacheLayer)
 			if err != nil {
 				return packit.BuildResult{}, err
 			}
@@ -165,7 +192,7 @@ func Build(entryResolver EntryResolver,
 				}
 
 				duration, err := clock.Measure(func() error {
-					return process.Run(layer.Path, npmCacheLayer.Path, projectPath, globalNpmrcPath, false)
+					return process.Run(layer.Path, pnpmCacheLayer.Path, projectPath, globalNpmrcPath, false)
 				})
 				if err != nil {
 					return packit.BuildResult{}, err
@@ -176,7 +203,7 @@ func Build(entryResolver EntryResolver,
 					return packit.BuildResult{}, err
 				}
 
-				err = symlinkResolver.Resolve(filepath.Join(projectPath, "package-lock.json"), layer.Path)
+				err = symlinkResolver.Resolve(filepath.Join(projectPath, PnpmLockfile), layer.Path)
 				if err != nil {
 					return packit.BuildResult{}, err
 				}
@@ -264,7 +291,7 @@ func Build(entryResolver EntryResolver,
 				}
 
 				duration, err := clock.Measure(func() error {
-					return process.Run(layer.Path, npmCacheLayer.Path, projectPath, globalNpmrcPath, true)
+					return process.Run(layer.Path, pnpmCacheLayer.Path, projectPath, globalNpmrcPath, true)
 				})
 				if err != nil {
 					return packit.BuildResult{}, err
@@ -303,12 +330,12 @@ func Build(entryResolver EntryResolver,
 				}
 
 				if build {
-					err = symlinkResolver.Copy(filepath.Join(projectPath, "package-lock.json"), buildLayerPath, layer.Path)
+					err = symlinkResolver.Copy(filepath.Join(projectPath, PnpmLockfile), buildLayerPath, layer.Path)
 					if err != nil {
 						return packit.BuildResult{}, err
 					}
 				} else {
-					err = symlinkResolver.Resolve(filepath.Join(projectPath, "package-lock.json"), targetLayerPath)
+					err = symlinkResolver.Resolve(filepath.Join(projectPath, PnpmLockfile), targetLayerPath)
 					if err != nil {
 						return packit.BuildResult{}, err
 					}
@@ -368,10 +395,10 @@ func Build(entryResolver EntryResolver,
 			layers = append(layers, layer)
 		}
 
-		exists, err := fs.Exists(npmCacheLayer.Path)
+		exists, err := fs.Exists(pnpmCacheLayer.Path)
 		if exists {
-			if !fs.IsEmptyDir(npmCacheLayer.Path) {
-				layers = append(layers, npmCacheLayer)
+			if !fs.IsEmptyDir(pnpmCacheLayer.Path) {
+				layers = append(layers, pnpmCacheLayer)
 			}
 		}
 		if err != nil {

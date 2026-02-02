@@ -1,11 +1,11 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	npminstall "github.com/goodrain/pnpm-install"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -18,7 +18,7 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 		tmpDir string
 		path   string
 
-		environment npminstall.Environment
+		environment pnpminstall.Environment
 	)
 
 	it.Before(func() {
@@ -48,7 +48,7 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 		name = "DEFAULT_KEY"
 `), 0600)).To(Succeed())
 
-		environment, err = npminstall.ParseEnvironment(path, []string{
+		environment, err = pnpminstall.ParseEnvironment(path, []string{
 			"SOME_KEY=some-value",
 			"BOOL_KEY=true",
 		})
@@ -63,7 +63,7 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 		context("failure cases", func() {
 			context("when the buildpack.toml cannot be read", func() {
 				it("returns an error", func() {
-					_, err := npminstall.ParseEnvironment("/no/such/path/to/buildpack.toml", nil)
+					_, err := pnpminstall.ParseEnvironment("/no/such/path/to/buildpack.toml", nil)
 					Expect(err).To(MatchError(ContainSubstring("failed to read \"buildpack.toml\"")))
 				})
 			})
@@ -74,7 +74,7 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					_, err := npminstall.ParseEnvironment(path, nil)
+					_, err := pnpminstall.ParseEnvironment(path, nil)
 					Expect(err).To(MatchError(ContainSubstring("failed to parse \"buildpack.toml\"")))
 				})
 			})

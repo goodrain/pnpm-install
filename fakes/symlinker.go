@@ -3,7 +3,7 @@ package fakes
 import (
 	"sync"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	npminstall "github.com/goodrain/pnpm-install"
 )
 
 type Symlinker struct {
@@ -26,9 +26,9 @@ type Symlinker struct {
 			Path string
 		}
 		Returns struct {
-			Symlinker npminstall.Symlinker
+			Symlinker pnpminstall.Symlinker
 		}
-		Stub func(string) npminstall.Symlinker
+		Stub func(string) pnpminstall.Symlinker
 	}
 }
 
@@ -43,7 +43,7 @@ func (f *Symlinker) Link(param1 string, param2 string) error {
 	}
 	return f.LinkCall.Returns.Error
 }
-func (f *Symlinker) WithPath(param1 string) npminstall.Symlinker {
+func (f *Symlinker) WithPath(param1 string) pnpminstall.Symlinker {
 	f.WithPathCall.mutex.Lock()
 	defer f.WithPathCall.mutex.Unlock()
 	f.WithPathCall.CallCount++

@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	npminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2/pexec"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
@@ -31,7 +31,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 		environment *fakes.EnvironmentConfig
 		buffer      *bytes.Buffer
 
-		process npminstall.CIBuildProcess
+		process pnpminstall.CIBuildProcess
 	)
 
 	it.Before(func() {
@@ -65,7 +65,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 
 		buffer = bytes.NewBuffer(nil)
 
-		process = npminstall.NewCIBuildProcess(executable, summer, environment, scribe.NewLogger(buffer))
+		process = pnpminstall.NewCIBuildProcess(executable, summer, environment, scribe.NewLogger(buffer))
 	})
 
 	it.After(func() {
@@ -179,7 +179,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 					executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
 						return errors.New("very bad error")
 					}
-					process = npminstall.NewCIBuildProcess(executable, summer, environment, scribe.NewLogger(buffer))
+					process = pnpminstall.NewCIBuildProcess(executable, summer, environment, scribe.NewLogger(buffer))
 				})
 
 				it("fails", func() {

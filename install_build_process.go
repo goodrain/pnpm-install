@@ -1,4 +1,4 @@
-package npminstall
+package pnpminstall
 
 import (
 	"errors"
@@ -36,7 +36,17 @@ func (r InstallBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath str
 		return err
 	}
 
+	// Set up pnpm store directory for caching
+	storeDir := filepath.Join(cacheDir, "store")
+	err = os.MkdirAll(storeDir, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to create pnpm store directory: %w", err)
+	}
+
 	environment := os.Environ()
+	// Set pnpm store-dir via environment variable
+	environment = append(environment, fmt.Sprintf("PNPM_HOME=%s", cacheDir))
+
 	if value, ok := r.environment.Lookup("NPM_CONFIG_LOGLEVEL"); ok {
 		environment = append(environment, fmt.Sprintf("NPM_CONFIG_LOGLEVEL=%s", value))
 	}
@@ -49,8 +59,10 @@ func (r InstallBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath str
 		environment = append(environment, "NODE_ENV=development")
 	}
 
-	args := []string{"install", "--unsafe-perm", "--cache", cacheDir}
-	r.logger.Subprocess("Running 'npm %s'", strings.Join(args, " "))
+	// Use pnpm install with frozen-lockfile and store-dir
+	// Use --reporter=append-only for better CI logging
+	args := []string{"install", "--frozen-lockfile", "--store-dir", storeDir, "--reporter=append-only"}
+	r.logger.Subprocess("Running 'pnpm %s'", strings.Join(args, " "))
 
 	err = r.executable.Execute(pexec.Execution{
 		Args:   args,
@@ -60,7 +72,7 @@ func (r InstallBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath str
 		Env:    environment,
 	})
 	if err != nil {
-		return fmt.Errorf("npm install failed: %w", err)
+		return fmt.Errorf("pnpm install failed: %w", err)
 	}
 
 	_, err = os.Stat(filepath.Join(workingDir, "node_modules"))

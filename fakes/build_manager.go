@@ -3,7 +3,7 @@ package fakes
 import (
 	"sync"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	npminstall "github.com/goodrain/pnpm-install"
 )
 
 type BuildManager struct {
@@ -14,15 +14,15 @@ type BuildManager struct {
 			WorkingDir string
 		}
 		Returns struct {
-			BuildProcess npminstall.BuildProcess
+			BuildProcess pnpminstall.BuildProcess
 			Bool         bool
 			Error        error
 		}
-		Stub func(string) (npminstall.BuildProcess, bool, error)
+		Stub func(string) (pnpminstall.BuildProcess, bool, error)
 	}
 }
 
-func (f *BuildManager) Resolve(param1 string) (npminstall.BuildProcess, bool, error) {
+func (f *BuildManager) Resolve(param1 string) (pnpminstall.BuildProcess, bool, error) {
 	f.ResolveCall.mutex.Lock()
 	defer f.ResolveCall.mutex.Unlock()
 	f.ResolveCall.CallCount++

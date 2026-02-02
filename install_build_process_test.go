@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	npminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2/pexec"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
@@ -29,7 +29,7 @@ func testInstallBuildProcess(t *testing.T, context spec.G, it spec.S) {
 		environment *fakes.EnvironmentConfig
 		buffer      *bytes.Buffer
 
-		process npminstall.InstallBuildProcess
+		process pnpminstall.InstallBuildProcess
 	)
 
 	it.Before(func() {
@@ -60,7 +60,7 @@ func testInstallBuildProcess(t *testing.T, context spec.G, it spec.S) {
 
 		buffer = bytes.NewBuffer(nil)
 
-		process = npminstall.NewInstallBuildProcess(executable, environment, scribe.NewLogger(buffer))
+		process = pnpminstall.NewInstallBuildProcess(executable, environment, scribe.NewLogger(buffer))
 	})
 
 	it.After(func() {

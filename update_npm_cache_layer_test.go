@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	npminstall "github.com/goodrain/pnpm-install"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/fs"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
@@ -57,7 +57,7 @@ func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
 	context("UpdateNpmCacheLayer", func() {
 		context("when cache layer is stale", func() {
 			it("updates cache layer", func() {
-				layer, err := npminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
+				layer, err := pnpminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(layer.Metadata).To(HaveKeyWithValue("cache_sha", workingDirSum))
 				Expect(buf.String()).NotTo(ContainSubstring("Reusing cached layer"))
@@ -75,7 +75,7 @@ func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
 				}
 			})
 			it("reuses the layer", func() {
-				layer, err := npminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
+				layer, err := pnpminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(layer.Metadata).To(HaveKeyWithValue("cache_sha", workingDirSum))
 				Expect(buf.String()).To(ContainSubstring("Reusing cached layer"))
@@ -93,7 +93,7 @@ func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					_, err = npminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
+					_, err = pnpminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
 					Expect(err).To(MatchError(ContainSubstring("permission denied")))
 				})
 			})

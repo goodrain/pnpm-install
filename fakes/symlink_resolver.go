@@ -3,7 +3,7 @@ package fakes
 import (
 	"sync"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	npminstall "github.com/goodrain/pnpm-install"
 )
 
 type SymlinkResolver struct {
@@ -27,10 +27,10 @@ type SymlinkResolver struct {
 			LockfilePath string
 		}
 		Returns struct {
-			Lockfile npminstall.Lockfile
+			Lockfile pnpminstall.Lockfile
 			Error    error
 		}
-		Stub func(string) (npminstall.Lockfile, error)
+		Stub func(string) (pnpminstall.Lockfile, error)
 	}
 	ResolveCall struct {
 		mutex     sync.Mutex
@@ -58,7 +58,7 @@ func (f *SymlinkResolver) Copy(param1 string, param2 string, param3 string) erro
 	}
 	return f.CopyCall.Returns.Error
 }
-func (f *SymlinkResolver) ParseLockfile(param1 string) (npminstall.Lockfile, error) {
+func (f *SymlinkResolver) ParseLockfile(param1 string) (pnpminstall.Lockfile, error) {
 	f.ParseLockfileCall.mutex.Lock()
 	defer f.ParseLockfileCall.mutex.Unlock()
 	f.ParseLockfileCall.CallCount++

@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	pnpminstall "github.com/goodrain/pnpm-install"
 )
 
-func Run(executablePath, appDir string, symlinkResolver npminstall.SymlinkResolver) error {
+func Run(executablePath, appDir string, symlinkResolver pnpminstall.SymlinkResolver) error {
 	fname := strings.Split(executablePath, "/")
 	layerPath := filepath.Join(fname[:len(fname)-2]...)
 	if filepath.IsAbs(executablePath) {
@@ -47,12 +47,12 @@ func Run(executablePath, appDir string, symlinkResolver npminstall.SymlinkResolv
 		return err
 	}
 
-	cacheFolder := filepath.Join(os.TempDir(), npminstall.NODE_MODULES_CACHE)
+	cacheFolder := filepath.Join(os.TempDir(), pnpminstall.NODE_MODULES_CACHE)
 	return os.Mkdir(cacheFolder, os.ModePerm)
 }
 
-func resolveWorkspaceModules(symlinkResolver npminstall.SymlinkResolver, appDir, layerPath string) error {
-	lockFile, err := symlinkResolver.ParseLockfile(filepath.Join(appDir, "package-lock.json"))
+func resolveWorkspaceModules(symlinkResolver pnpminstall.SymlinkResolver, appDir, layerPath string) error {
+	lockFile, err := symlinkResolver.ParseLockfile(filepath.Join(appDir, pnpminstall.PnpmLockfile))
 	if err != nil {
 		return err
 	}

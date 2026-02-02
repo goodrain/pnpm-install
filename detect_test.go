@@ -1,11 +1,11 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	npminstall "github.com/goodrain/pnpm-install"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/sclevine/spec"
 
@@ -32,7 +32,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		t.Setenv("BP_NODE_PROJECT_PATH", "")
 
-		detect = npminstall.Detect()
+		detect = pnpminstall.Detect()
 	})
 
 	it("returns a plan that provides node_modules", func() {
@@ -42,20 +42,20 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result.Plan).To(Equal(packit.BuildPlan{
 			Provides: []packit.BuildPlanProvision{
-				{Name: npminstall.NodeModules},
+				{Name: pnpminstall.NodeModules},
 			},
 			Requires: []packit.BuildPlanRequirement{
 				{
-					Name: npminstall.Node,
-					Metadata: npminstall.BuildPlanMetadata{
+					Name: pnpminstall.Node,
+					Metadata: pnpminstall.BuildPlanMetadata{
 						Version:       "1.2.3",
 						VersionSource: "package.json",
 						Build:         true,
 					},
 				},
 				{
-					Name: npminstall.Npm,
-					Metadata: npminstall.BuildPlanMetadata{
+					Name: pnpminstall.Npm,
+					Metadata: pnpminstall.BuildPlanMetadata{
 						Build: true,
 					},
 				},
@@ -77,18 +77,18 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
 					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Npm,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
@@ -128,25 +128,25 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
 					{
-						Name: npminstall.Cpython,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Cpython,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build:  true,
 							Launch: false,
 						},
 					},
 					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Npm,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
@@ -164,25 +164,25 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
 					{
-						Name: npminstall.Cpython,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Cpython,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build:  true,
 							Launch: false,
 						},
 					},
 					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Npm,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
@@ -199,18 +199,18 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
 					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Npm,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
@@ -227,18 +227,18 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
 					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Npm,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
