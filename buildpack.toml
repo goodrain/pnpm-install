@@ -4,7 +4,7 @@ api = "0.7"
   homepage = "https://github.com/goodrain/pnpm-install"
   id = "goodrain/pnpm-install"
   name = "Rainbond Buildpack for PNPM Install"
-  version = "0.1.0"
+  version = "2.3.3"
   sbom-formats = ["application/vnd.cyclonedx+json", "application/spdx+json", "application/vnd.syft+json"]
 
   [[buildpack.licenses]]
