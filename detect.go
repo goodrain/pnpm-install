@@ -89,6 +89,7 @@ func Detect() packit.DetectFunc {
 			Plan: packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
 					{Name: NodeModules},
+					{Name: Npm}, // Provide npm so node-run-script can work
 				},
 				Requires: requirements,
 			},

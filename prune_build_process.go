@@ -29,6 +29,10 @@ func (r PruneBuildProcess) ShouldRun(workingDir string, metadata map[string]inte
 
 func (r PruneBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath string, launch bool) error {
 	environment := os.Environ()
+
+	// Set CI=true for pnpm to work correctly in CI environments
+	environment = append(environment, "CI=true")
+
 	if value, ok := r.environment.Lookup("NPM_CONFIG_LOGLEVEL"); ok {
 		environment = append(environment, fmt.Sprintf("NPM_CONFIG_LOGLEVEL=%s", value))
 	}

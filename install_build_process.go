@@ -46,6 +46,8 @@ func (r InstallBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath str
 	environment := os.Environ()
 	// Set pnpm store-dir via environment variable
 	environment = append(environment, fmt.Sprintf("PNPM_HOME=%s", cacheDir))
+	// Set CI=true for pnpm to work correctly in CI environments
+	environment = append(environment, "CI=true")
 
 	if value, ok := r.environment.Lookup("NPM_CONFIG_LOGLEVEL"); ok {
 		environment = append(environment, fmt.Sprintf("NPM_CONFIG_LOGLEVEL=%s", value))

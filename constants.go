@@ -5,6 +5,7 @@ const (
 	NodeModules = "node_modules"
 	Node        = "node"
 	Pnpm        = "pnpm"
+	Npm         = "npm"
 
 	LayerNameNodeModules = "modules"
 	LayerNameCache       = "pnpm-store"
