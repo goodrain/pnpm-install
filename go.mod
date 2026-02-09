@@ -1,6 +1,6 @@
 module github.com/goodrain/pnpm-install
 
-go 1.25.6
+go 1.25.7
 
 require (
 	github.com/BurntSushi/toml v1.6.0
@@ -306,7 +306,6 @@ require (
 	google.golang.org/grpc v1.78.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.67.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
