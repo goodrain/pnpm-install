@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	pnpminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2/pexec"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
@@ -31,7 +31,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 		environment *fakes.EnvironmentConfig
 		buffer      *bytes.Buffer
 
-		process npminstall.CIBuildProcess
+		process pnpminstall.CIBuildProcess
 	)
 
 	it.Before(func() {
@@ -65,7 +65,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 
 		buffer = bytes.NewBuffer(nil)
 
-		process = npminstall.NewCIBuildProcess(executable, summer, environment, scribe.NewLogger(buffer))
+		process = pnpminstall.NewCIBuildProcess(executable, summer, environment, scribe.NewLogger(buffer))
 	})
 
 	it.After(func() {
@@ -87,7 +87,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(summer.SumCall.Receives.Paths[0]).To(Equal(filepath.Join(workingDir, "package.json")))
-				Expect(summer.SumCall.Receives.Paths[1]).To(Equal(filepath.Join(workingDir, "package-lock.json")))
+				Expect(summer.SumCall.Receives.Paths[1]).To(Equal(filepath.Join(workingDir, "pnpm-lock.yaml")))
 				Expect(summer.SumCall.Receives.Paths[2]).To(ContainSubstring("executable_response"))
 
 				Expect(run).To(BeFalse())
@@ -97,8 +97,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 				}
 				lastExecution := executions[len(executions)-1]
 				Expect(lastExecution.Args).To(Equal([]string{
-					"get",
-					"user-agent",
+					"--version",
 				}))
 				Expect(lastExecution.Dir).To(Equal(workingDir))
 			})
@@ -116,7 +115,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(summer.SumCall.Receives.Paths[0]).To(Equal(filepath.Join(workingDir, "package.json")))
-				Expect(summer.SumCall.Receives.Paths[1]).To(Equal(filepath.Join(workingDir, "package-lock.json")))
+				Expect(summer.SumCall.Receives.Paths[1]).To(Equal(filepath.Join(workingDir, "pnpm-lock.yaml")))
 				Expect(summer.SumCall.Receives.Paths[2]).To(ContainSubstring("executable_response"))
 
 				Expect(run).To(BeTrue())
@@ -127,8 +126,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 
 				lastExecution := executions[len(executions)-1]
 				Expect(lastExecution.Args).To(Equal([]string{
-					"get",
-					"user-agent",
+					"--version",
 				}))
 				Expect(lastExecution.Dir).To(Equal(workingDir))
 			})
@@ -144,7 +142,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(summer.SumCall.Receives.Paths[0]).To(Equal(filepath.Join(workingDir, "package.json")))
-				Expect(summer.SumCall.Receives.Paths[1]).To(Equal(filepath.Join(workingDir, "package-lock.json")))
+				Expect(summer.SumCall.Receives.Paths[1]).To(Equal(filepath.Join(workingDir, "pnpm-lock.yaml")))
 				Expect(summer.SumCall.Receives.Paths[2]).To(ContainSubstring("executable_response"))
 
 				Expect(run).To(BeTrue())
@@ -155,8 +153,7 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 
 				lastExecution := executions[len(executions)-1]
 				Expect(lastExecution.Args).To(Equal([]string{
-					"get",
-					"user-agent",
+					"--version",
 				}))
 				Expect(lastExecution.Dir).To(Equal(workingDir))
 			})
@@ -179,13 +176,13 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 					executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
 						return errors.New("very bad error")
 					}
-					process = npminstall.NewCIBuildProcess(executable, summer, environment, scribe.NewLogger(buffer))
+					process = pnpminstall.NewCIBuildProcess(executable, summer, environment, scribe.NewLogger(buffer))
 				})
 
 				it("fails", func() {
 					_, _, err := process.ShouldRun(workingDir, nil, "")
 					Expect(err).To(MatchError(ContainSubstring("very bad error")))
-					Expect(err).To(MatchError(ContainSubstring("failed to execute npm get user-agent")))
+					Expect(err).To(MatchError(ContainSubstring("failed to execute pnpm --version")))
 				})
 			})
 
@@ -197,11 +194,11 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 			it("succeeds", func() {
 				Expect(process.Run(modulesDir, cacheDir, workingDir, "some-npmrc-path", false)).To(Succeed())
 
-				Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"ci", "--unsafe-perm", "--cache", cacheDir}))
+				Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"install", "--frozen-lockfile", "--store-dir", filepath.Join(cacheDir, "store"), "--reporter=append-only"}))
 				Expect(executable.ExecuteCall.Receives.Execution.Dir).To(Equal(workingDir))
-				Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path", "NODE_ENV=development")))
+				Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "PNPM_HOME="+cacheDir, "CI=true", "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path", "NODE_ENV=development")))
 				Expect(buffer.String()).To(ContainLines(
-					fmt.Sprintf("    Running 'npm ci --unsafe-perm --cache %s'", cacheDir),
+					fmt.Sprintf("    Running 'pnpm install --frozen-lockfile --store-dir %s/store --reporter=append-only'", cacheDir),
 					"      stdout output",
 					"      stderr output",
 				))
@@ -216,11 +213,11 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 			it("succeeds", func() {
 				Expect(process.Run(modulesDir, cacheDir, workingDir, "some-npmrc-path", true)).To(Succeed())
 
-				Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"ci", "--unsafe-perm", "--cache", cacheDir}))
+				Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"install", "--frozen-lockfile", "--store-dir", filepath.Join(cacheDir, "store"), "--reporter=append-only"}))
 				Expect(executable.ExecuteCall.Receives.Execution.Dir).To(Equal(workingDir))
-				Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path")))
+				Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "PNPM_HOME="+cacheDir, "CI=true", "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path")))
 				Expect(buffer.String()).To(ContainLines(
-					fmt.Sprintf("    Running 'npm ci --unsafe-perm --cache %s'", cacheDir),
+					fmt.Sprintf("    Running 'pnpm install --frozen-lockfile --store-dir %s/store --reporter=append-only'", cacheDir),
 					"      stdout output",
 					"      stderr output",
 				))
@@ -278,11 +275,11 @@ func testCIBuildProcess(t *testing.T, context spec.G, it spec.S) {
 				it("returns an error", func() {
 					err := process.Run(modulesDir, cacheDir, workingDir, "", false)
 					Expect(buffer.String()).To(ContainLines(
-						fmt.Sprintf("    Running 'npm ci --unsafe-perm --cache %s'", cacheDir),
+						fmt.Sprintf("    Running 'pnpm install --frozen-lockfile --store-dir %s/store --reporter=append-only'", cacheDir),
 						"      ci failure on stdout",
 						"      ci failure on stderr",
 					))
-					Expect(err).To(MatchError("npm ci failed: failed to execute"))
+					Expect(err).To(MatchError("pnpm install failed: failed to execute"))
 				})
 			})
 		})

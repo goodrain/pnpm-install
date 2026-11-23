@@ -1,4 +1,4 @@
-package npminstall
+package pnpminstall
 
 import (
 	"errors"
@@ -31,12 +31,12 @@ func NewRebuildBuildProcess(executable Executable, summer Summer, environment En
 func (r RebuildBuildProcess) ShouldRun(workingDir string, metadata map[string]interface{}, npmrcPath string) (bool, string, error) {
 	cachedNodeVersion, err := cacheExecutableResponse(
 		r.executable,
-		[]string{"get", "user-agent"},
+		[]string{"--version"},
 		workingDir,
 		npmrcPath,
 		r.logger)
 	if err != nil {
-		return false, "", fmt.Errorf("failed to execute npm get user-agent: %w", err)
+		return false, "", fmt.Errorf("failed to execute pnpm --version: %w", err)
 	}
 	defer func() {
 		if removeErr := os.Remove(cachedNodeVersion); removeErr != nil {
@@ -71,11 +71,11 @@ func (r RebuildBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath str
 		Stderr: r.logger.ActionWriter,
 	})
 	if err != nil {
-		return fmt.Errorf("vendored node_modules have unmet dependencies: npm list failed: %w", err)
+		return fmt.Errorf("vendored node_modules have unmet dependencies: pnpm list failed: %w", err)
 	}
 
-	args := []string{"run-script", "preinstall", "--if-present"}
-	r.logger.Subprocess("Running 'npm %s'", strings.Join(args, " "))
+	args := []string{"run", "preinstall", "--if-present"}
+	r.logger.Subprocess("Running 'pnpm %s'", strings.Join(args, " "))
 	err = r.executable.Execute(pexec.Execution{
 		Args:   args,
 		Dir:    workingDir,
@@ -98,8 +98,8 @@ func (r RebuildBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath str
 	}
 
 	nodeHome, _ := r.environment.Lookup("NODE_HOME")
-	args = []string{"rebuild", fmt.Sprintf("--nodedir=%s", nodeHome)}
-	r.logger.Subprocess("Running 'npm %s'", strings.Join(args, " "))
+	args = []string{"rebuild", fmt.Sprintf("--node-linker=%s", nodeHome)}
+	r.logger.Subprocess("Running 'pnpm %s'", strings.Join(args, " "))
 	err = r.executable.Execute(pexec.Execution{
 		Args:   args,
 		Dir:    workingDir,
@@ -108,11 +108,11 @@ func (r RebuildBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath str
 		Env:    env,
 	})
 	if err != nil {
-		return fmt.Errorf("npm rebuild failed: %s", err)
+		return fmt.Errorf("pnpm rebuild failed: %s", err)
 	}
 
-	args = []string{"run-script", "postinstall", "--if-present"}
-	r.logger.Subprocess("Running 'npm %s'", strings.Join(args, " "))
+	args = []string{"run", "postinstall", "--if-present"}
+	r.logger.Subprocess("Running 'pnpm %s'", strings.Join(args, " "))
 	err = r.executable.Execute(pexec.Execution{
 		Args:   args,
 		Dir:    workingDir,

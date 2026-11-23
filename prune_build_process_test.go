@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	pnpminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2/pexec"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
@@ -28,7 +28,7 @@ func testPruneBuildProcess(t *testing.T, context spec.G, it spec.S) {
 		environment *fakes.EnvironmentConfig
 		buffer      *bytes.Buffer
 
-		process npminstall.PruneBuildProcess
+		process pnpminstall.PruneBuildProcess
 	)
 
 	it.Before(func() {
@@ -59,7 +59,7 @@ func testPruneBuildProcess(t *testing.T, context spec.G, it spec.S) {
 
 		buffer = bytes.NewBuffer(nil)
 
-		process = npminstall.NewPruneBuildProcess(executable, environment, scribe.NewLogger(buffer))
+		process = pnpminstall.NewPruneBuildProcess(executable, environment, scribe.NewLogger(buffer))
 	})
 
 	it.After(func() {
@@ -80,11 +80,11 @@ func testPruneBuildProcess(t *testing.T, context spec.G, it spec.S) {
 	context("Run", func() {
 		it("succeeds", func() {
 			Expect(process.Run(modulesDir, cacheDir, workingDir, "some-npmrc-path", true)).To(Succeed())
-			Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"prune"}))
+			Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"prune", "--prod"}))
 			Expect(executable.ExecuteCall.Receives.Execution.Dir).To(Equal(workingDir))
-			Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path")))
+			Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "CI=true", "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path")))
 			Expect(buffer.String()).To(ContainLines(
-				"    Running 'npm prune'",
+				"    Running 'pnpm prune --prod'",
 				"      stdout output",
 				"      stderr output",
 			))
@@ -107,11 +107,11 @@ func testPruneBuildProcess(t *testing.T, context spec.G, it spec.S) {
 				it("returns an error", func() {
 					err := process.Run(modulesDir, cacheDir, workingDir, "", true)
 					Expect(buffer.String()).To(ContainLines(
-						"    Running 'npm prune'",
+						"    Running 'pnpm prune --prod'",
 						"      install error on stdout",
 						"      install error on stderr",
 					))
-					Expect(err).To(MatchError("npm install failed: failed to execute"))
+					Expect(err).To(MatchError("pnpm prune failed: failed to execute"))
 				})
 			})
 		})

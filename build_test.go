@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -10,8 +10,8 @@ import (
 	"regexp"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	pnpminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/chronos"
 	"github.com/paketo-buildpacks/packit/v2/sbom"
@@ -114,7 +114,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		symlinkResolver = &fakes.SymlinkResolver{}
 
-		build = npminstall.Build(
+		build = pnpminstall.Build(
 			entryResolver,
 			configurationManager,
 			buildManager,
@@ -270,8 +270,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			}`))
 
 			cacheLayer := result.Layers[1]
-			Expect(cacheLayer.Name).To(Equal(npminstall.LayerNameCache))
-			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(cacheLayer.Name).To(Equal(pnpminstall.LayerNameCache))
+			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(cacheLayer.SharedEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.BuildEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.LaunchEnv).To(Equal(packit.Environment{}))
@@ -287,14 +287,14 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Expect(buildManager.ResolveCall.Receives.WorkingDir).To(Equal(workingDir))
 
 			Expect(processLayerDir).To(Equal(filepath.Join(layersDir, "build-modules")))
-			Expect(processCacheDir).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(processCacheDir).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(processWorkingDir).To(Equal(workingDir))
 			Expect(processNpmrcPath).To(Equal(""))
 
 			Expect(linker.LinkCall.Receives.Source).To(Equal(filepath.Join(workingDir, "node_modules")))
 			Expect(linker.LinkCall.Receives.Target).To(Equal(filepath.Join(layersDir, "build-modules", "node_modules")))
 
-			Expect(symlinkResolver.ResolveCall.Receives.LockfilePath).To(Equal(filepath.Join(workingDir, "package-lock.json")))
+			Expect(symlinkResolver.ResolveCall.Receives.LockfilePath).To(Equal(filepath.Join(workingDir, "pnpm-lock.yaml")))
 			Expect(symlinkResolver.ResolveCall.Receives.LayerPath).To(Equal(filepath.Join(layersDir, "build-modules")))
 		})
 	})
@@ -437,8 +437,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			}`))
 
 			cacheLayer := result.Layers[1]
-			Expect(cacheLayer.Name).To(Equal(npminstall.LayerNameCache))
-			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(cacheLayer.Name).To(Equal(pnpminstall.LayerNameCache))
+			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(cacheLayer.SharedEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.BuildEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.LaunchEnv).To(Equal(packit.Environment{}))
@@ -456,14 +456,14 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Expect(pruneProcess.RunCall.CallCount).To(Equal(0))
 
 			Expect(processLayerDir).To(Equal(filepath.Join(layersDir, "launch-modules")))
-			Expect(processCacheDir).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(processCacheDir).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(processWorkingDir).To(Equal(workingDir))
 			Expect(processNpmrcPath).To(Equal(""))
 
 			Expect(linker.LinkCall.Receives.Source).To(Equal(filepath.Join(workingDir, "node_modules")))
 			Expect(linker.LinkCall.Receives.Target).To(Equal(filepath.Join(layersDir, "launch-modules", "node_modules")))
 
-			Expect(symlinkResolver.ResolveCall.Receives.LockfilePath).To(Equal(filepath.Join(workingDir, "package-lock.json")))
+			Expect(symlinkResolver.ResolveCall.Receives.LockfilePath).To(Equal(filepath.Join(workingDir, "pnpm-lock.yaml")))
 			Expect(symlinkResolver.ResolveCall.Receives.LayerPath).To(Equal(filepath.Join(layersDir, "launch-modules")))
 		})
 
@@ -755,8 +755,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			}`))
 
 			cacheLayer := result.Layers[2]
-			Expect(cacheLayer.Name).To(Equal(npminstall.LayerNameCache))
-			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+			Expect(cacheLayer.Name).To(Equal(pnpminstall.LayerNameCache))
+			Expect(cacheLayer.Path).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 			Expect(cacheLayer.SharedEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.BuildEnv).To(Equal(packit.Environment{}))
 			Expect(cacheLayer.LaunchEnv).To(Equal(packit.Environment{}))
@@ -773,13 +773,13 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Expect(linker.LinkCall.Receives.Source).To(Equal(filepath.Join(workingDir, "node_modules")))
 			Expect(linker.LinkCall.Receives.Target).To(Equal(filepath.Join(buildLayer.Path, "node_modules")))
 
-			Expect(symlinkResolver.ResolveCall.Receives.LockfilePath).To(Equal(filepath.Join(workingDir, "package-lock.json")))
+			Expect(symlinkResolver.ResolveCall.Receives.LockfilePath).To(Equal(filepath.Join(workingDir, "pnpm-lock.yaml")))
 			Expect(symlinkResolver.ResolveCall.Receives.LayerPath).To(Equal(filepath.Join(buildLayer.Path)))
 			//Resolve should only be called once targeting the build-modules layer
 			Expect(symlinkResolver.ResolveCall.CallCount).To(Equal(1))
 
 			//Copy should be called in place of Resolve to copy workspace files to the launch-modules layer
-			Expect(symlinkResolver.CopyCall.Receives.LockfilePath).To(Equal(filepath.Join(workingDir, "package-lock.json")))
+			Expect(symlinkResolver.CopyCall.Receives.LockfilePath).To(Equal(filepath.Join(workingDir, "pnpm-lock.yaml")))
 			Expect(symlinkResolver.CopyCall.Receives.SourceLayerPath).To(Equal(filepath.Join(buildLayer.Path)))
 			Expect(symlinkResolver.CopyCall.Receives.TargetLayerPath).To(Equal(filepath.Join(launchLayer.Path)))
 		})
@@ -896,7 +896,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Expect(buildManager.ResolveCall.Receives.WorkingDir).To(Equal(filepath.Join(workingDir, "some-dir")))
 
 				Expect(processLayerDir).To(Equal(filepath.Join(layersDir, "launch-modules")))
-				Expect(processCacheDir).To(Equal(filepath.Join(layersDir, npminstall.LayerNameCache)))
+				Expect(processCacheDir).To(Equal(filepath.Join(layersDir, pnpminstall.LayerNameCache)))
 				Expect(processWorkingDir).To(Equal(filepath.Join(workingDir, "some-dir")))
 			})
 		})
@@ -957,11 +957,11 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("failure cases", func() {
-		context("when the npm-cache layer cannot be fetched", func() {
+		context("when the pnpm-store layer cannot be fetched", func() {
 			it.Before(func() {
-				_, err := os.Create(filepath.Join(layersDir, "npm-cache.toml"))
+				_, err := os.Create(filepath.Join(layersDir, "pnpm-store.toml"))
 				Expect(err).NotTo(HaveOccurred())
-				Expect(os.Chmod(filepath.Join(layersDir, "npm-cache.toml"), 0000)).To(Succeed())
+				Expect(os.Chmod(filepath.Join(layersDir, "pnpm-store.toml"), 0000)).To(Succeed())
 			})
 
 			it("returns an error", func() {

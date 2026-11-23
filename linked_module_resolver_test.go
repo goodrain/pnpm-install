@@ -1,11 +1,11 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	pnpminstall "github.com/goodrain/pnpm-install"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -16,7 +16,7 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 		Expect = NewWithT(t).Expect
 
 		workspace, layerPath, otherLayerPath, tmpDir string
-		resolver                                     npminstall.LinkedModuleResolver
+		resolver                                     pnpminstall.LinkedModuleResolver
 	)
 
 	it.Before(func() {
@@ -42,31 +42,28 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.MkdirAll(filepath.Join(workspace, "module-5"), os.ModePerm)).To(Succeed())
 		Expect(os.WriteFile(filepath.Join(workspace, "module-5", "index.js"), nil, 0400)).To(Succeed())
 
-		err = os.WriteFile(filepath.Join(workspace, "package-lock.json"), []byte(`{
+		err = os.WriteFile(filepath.Join(workspace, "pnpm-lock.yaml"), []byte(`{
 			"packages": {
 				"module-1": {
-					"resolved": "src/packages/module-1",
-					"link": true
+					"resolution": {"directory": "src/packages/module-1"}
 				},
 				"module-2": {
 					"resolved": "http://example.com/module-2.tgz"
 				},
 				"module-3": {
-					"resolved": "workspaces/example/module-3",
-					"link": true
+					"resolution": {"directory": "workspaces/example/module-3"}
 				},
 				"module-4": {
 					"resolved": "http://example.com/module-4.tgz"
 				},
 				"module-5": {
-					"resolved": "module-5",
-					"link": true
+					"resolution": {"directory": "module-5"}
 				}
 			}
 		}`), 0600)
 		Expect(err).NotTo(HaveOccurred())
 
-		resolver = npminstall.NewLinkedModuleResolver(npminstall.NewLinker(tmpDir))
+		resolver = pnpminstall.NewLinkedModuleResolver(pnpminstall.NewLinker(tmpDir))
 	})
 
 	it.After(func() {
@@ -77,8 +74,8 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("Resolve", func() {
-		it("resolves all linked modules in a package-lock.json", func() {
-			err := resolver.Resolve(filepath.Join(workspace, "package-lock.json"), layerPath)
+		it("resolves all linked modules in a pnpm-lock.yaml", func() {
+			err := resolver.Resolve(filepath.Join(workspace, "pnpm-lock.yaml"), layerPath)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(filepath.Join(layerPath, "module-5", "index.js")).To(BeARegularFile())
@@ -112,30 +109,29 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 
 		context("failure cases", func() {
 			context("when the lockfile cannot be opened", func() {
-				it("returns an error", func() {
-					err := resolver.Resolve("/no/such/path/to/package-lock.json", layerPath)
-					Expect(err).To(MatchError(ContainSubstring(`failed to open "package-lock.json"`)))
+				it("skips linked modules", func() {
+					err := resolver.Resolve("/no/such/path/to/pnpm-lock.yaml", layerPath)
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 
 			context("when the lockfile cannot be parsed", func() {
 				it.Before(func() {
-					Expect(os.WriteFile(filepath.Join(workspace, "package-lock.json"), []byte("%%%"), 0600)).To(Succeed())
+					Expect(os.WriteFile(filepath.Join(workspace, "pnpm-lock.yaml"), []byte("%%%"), 0600)).To(Succeed())
 				})
 
-				it("returns an error", func() {
-					err := resolver.Resolve(filepath.Join(workspace, "package-lock.json"), layerPath)
-					Expect(err).To(MatchError(ContainSubstring(`failed to parse "package-lock.json"`)))
+				it("skips linked modules", func() {
+					err := resolver.Resolve(filepath.Join(workspace, "pnpm-lock.yaml"), layerPath)
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 
 			context("when the destination cannot be scaffolded", func() {
 				it.Before(func() {
-					err := os.WriteFile(filepath.Join(workspace, "package-lock.json"), []byte(`{
+					err := os.WriteFile(filepath.Join(workspace, "pnpm-lock.yaml"), []byte(`{
 						"packages": {
 							"module": {
-								"resolved": "src/packages/module",
-								"link": true
+								"resolution": {"directory": "src/packages/module"}
 							}
 						}
 					}`), 0600)
@@ -145,7 +141,7 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					err := resolver.Resolve(filepath.Join(workspace, "package-lock.json"), filepath.Join(layerPath, "sub-dir"))
+					err := resolver.Resolve(filepath.Join(workspace, "pnpm-lock.yaml"), filepath.Join(layerPath, "sub-dir"))
 					Expect(err).To(MatchError(ContainSubstring("failed to setup linked module directory scaffolding")))
 				})
 			})
@@ -157,7 +153,7 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					err := resolver.Resolve(filepath.Join(workspace, "package-lock.json"), layerPath)
+					err := resolver.Resolve(filepath.Join(workspace, "pnpm-lock.yaml"), layerPath)
 					Expect(err).To(MatchError(ContainSubstring("failed to copy linked module directory to layer path")))
 				})
 			})
@@ -168,7 +164,7 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					err := resolver.Resolve(filepath.Join(workspace, "package-lock.json"), layerPath)
+					err := resolver.Resolve(filepath.Join(workspace, "pnpm-lock.yaml"), layerPath)
 					Expect(err).To(MatchError(ContainSubstring("failed to symlink linked module directory")))
 				})
 			})
@@ -188,8 +184,8 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 
 		})
 
-		it("resolves all linked modules in a package-lock.json", func() {
-			err := resolver.Copy(filepath.Join(workspace, "package-lock.json"), layerPath, otherLayerPath)
+		it("resolves all linked modules in a pnpm-lock.yaml", func() {
+			err := resolver.Copy(filepath.Join(workspace, "pnpm-lock.yaml"), layerPath, otherLayerPath)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(filepath.Join(layerPath, "module-5", "index.js")).To(BeARegularFile())
@@ -200,30 +196,29 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 
 		context("failure cases", func() {
 			context("when the lockfile cannot be opened", func() {
-				it("returns an error", func() {
-					err := resolver.Resolve("/no/such/path/to/package-lock.json", layerPath)
-					Expect(err).To(MatchError(ContainSubstring(`failed to open "package-lock.json"`)))
+				it("skips linked modules", func() {
+					err := resolver.Resolve("/no/such/path/to/pnpm-lock.yaml", layerPath)
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 
 			context("when the lockfile cannot be parsed", func() {
 				it.Before(func() {
-					Expect(os.WriteFile(filepath.Join(workspace, "package-lock.json"), []byte("%%%"), 0600)).To(Succeed())
+					Expect(os.WriteFile(filepath.Join(workspace, "pnpm-lock.yaml"), []byte("%%%"), 0600)).To(Succeed())
 				})
 
-				it("returns an error", func() {
-					err := resolver.Resolve(filepath.Join(workspace, "package-lock.json"), layerPath)
-					Expect(err).To(MatchError(ContainSubstring(`failed to parse "package-lock.json"`)))
+				it("skips linked modules", func() {
+					err := resolver.Resolve(filepath.Join(workspace, "pnpm-lock.yaml"), layerPath)
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 
 			context("when the destination cannot be scaffolded", func() {
 				it.Before(func() {
-					err := os.WriteFile(filepath.Join(workspace, "package-lock.json"), []byte(`{
+					err := os.WriteFile(filepath.Join(workspace, "pnpm-lock.yaml"), []byte(`{
 						"packages": {
 							"module": {
-								"resolved": "src/packages/module",
-								"link": true
+								"resolution": {"directory": "src/packages/module"}
 							}
 						}
 					}`), 0600)
@@ -233,7 +228,7 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					err := resolver.Resolve(filepath.Join(workspace, "package-lock.json"), filepath.Join(otherLayerPath, "sub-dir"))
+					err := resolver.Resolve(filepath.Join(workspace, "pnpm-lock.yaml"), filepath.Join(otherLayerPath, "sub-dir"))
 					Expect(err).To(MatchError(ContainSubstring("failed to setup linked module directory scaffolding")))
 				})
 			})
@@ -245,7 +240,7 @@ func testLinkedModuleResolver(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					err := resolver.Resolve(filepath.Join(workspace, "package-lock.json"), layerPath)
+					err := resolver.Resolve(filepath.Join(workspace, "pnpm-lock.yaml"), layerPath)
 					Expect(err).To(MatchError(ContainSubstring("failed to copy linked module directory to layer path")))
 				})
 			})

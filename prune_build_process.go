@@ -1,4 +1,4 @@
-package npminstall
+package pnpminstall
 
 import (
 	"fmt"
@@ -29,6 +29,10 @@ func (r PruneBuildProcess) ShouldRun(workingDir string, metadata map[string]inte
 
 func (r PruneBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath string, launch bool) error {
 	environment := os.Environ()
+
+	// Set CI=true for pnpm to work correctly in CI environments
+	environment = append(environment, "CI=true")
+
 	if value, ok := r.environment.Lookup("NPM_CONFIG_LOGLEVEL"); ok {
 		environment = append(environment, fmt.Sprintf("NPM_CONFIG_LOGLEVEL=%s", value))
 	}
@@ -37,8 +41,9 @@ func (r PruneBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath strin
 		environment = append(environment, fmt.Sprintf("NPM_CONFIG_GLOBALCONFIG=%s", npmrcPath))
 	}
 
-	args := []string{"prune"}
-	r.logger.Subprocess("Running 'npm %s'", strings.Join(args, " "))
+	// Use pnpm prune --prod to remove devDependencies
+	args := []string{"prune", "--prod"}
+	r.logger.Subprocess("Running 'pnpm %s'", strings.Join(args, " "))
 
 	err := r.executable.Execute(pexec.Execution{
 		Args:   args,
@@ -48,7 +53,7 @@ func (r PruneBuildProcess) Run(modulesDir, cacheDir, workingDir, npmrcPath strin
 		Env:    environment,
 	})
 	if err != nil {
-		return fmt.Errorf("npm install failed: %w", err)
+		return fmt.Errorf("pnpm prune failed: %w", err)
 	}
 
 	return nil

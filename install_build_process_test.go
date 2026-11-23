@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	pnpminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2/pexec"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
@@ -29,7 +29,7 @@ func testInstallBuildProcess(t *testing.T, context spec.G, it spec.S) {
 		environment *fakes.EnvironmentConfig
 		buffer      *bytes.Buffer
 
-		process npminstall.InstallBuildProcess
+		process pnpminstall.InstallBuildProcess
 	)
 
 	it.Before(func() {
@@ -60,7 +60,7 @@ func testInstallBuildProcess(t *testing.T, context spec.G, it spec.S) {
 
 		buffer = bytes.NewBuffer(nil)
 
-		process = npminstall.NewInstallBuildProcess(executable, environment, scribe.NewLogger(buffer))
+		process = pnpminstall.NewInstallBuildProcess(executable, environment, scribe.NewLogger(buffer))
 	})
 
 	it.After(func() {
@@ -86,11 +86,11 @@ func testInstallBuildProcess(t *testing.T, context spec.G, it spec.S) {
 		context("launch is false", func() {
 			it("succeeds", func() {
 				Expect(process.Run(modulesDir, cacheDir, workingDir, "some-npmrc-path", false)).To(Succeed())
-				Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"install", "--unsafe-perm", "--cache", cacheDir}))
+				Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"install", "--frozen-lockfile", "--store-dir", filepath.Join(cacheDir, "store"), "--reporter=append-only"}))
 				Expect(executable.ExecuteCall.Receives.Execution.Dir).To(Equal(workingDir))
-				Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path", "NODE_ENV=development")))
+				Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "PNPM_HOME="+cacheDir, "CI=true", "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path", "NODE_ENV=development")))
 				Expect(buffer.String()).To(ContainLines(
-					fmt.Sprintf("    Running 'npm install --unsafe-perm --cache %s'", cacheDir),
+					fmt.Sprintf("    Running 'pnpm install --frozen-lockfile --store-dir %s/store --reporter=append-only'", cacheDir),
 					"      stdout output",
 					"      stderr output",
 				))
@@ -104,11 +104,11 @@ func testInstallBuildProcess(t *testing.T, context spec.G, it spec.S) {
 		context("launch is true", func() {
 			it("succeeds", func() {
 				Expect(process.Run(modulesDir, cacheDir, workingDir, "some-npmrc-path", true)).To(Succeed())
-				Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"install", "--unsafe-perm", "--cache", cacheDir}))
+				Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"install", "--frozen-lockfile", "--store-dir", filepath.Join(cacheDir, "store"), "--reporter=append-only"}))
 				Expect(executable.ExecuteCall.Receives.Execution.Dir).To(Equal(workingDir))
-				Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path")))
+				Expect(executable.ExecuteCall.Receives.Execution.Env).To(Equal(append(os.Environ(), "PNPM_HOME="+cacheDir, "CI=true", "NPM_CONFIG_LOGLEVEL=some-val", "NPM_CONFIG_GLOBALCONFIG=some-npmrc-path")))
 				Expect(buffer.String()).To(ContainLines(
-					fmt.Sprintf("    Running 'npm install --unsafe-perm --cache %s'", cacheDir),
+					fmt.Sprintf("    Running 'pnpm install --frozen-lockfile --store-dir %s/store --reporter=append-only'", cacheDir),
 					"      stdout output",
 					"      stderr output",
 				))
@@ -163,11 +163,11 @@ func testInstallBuildProcess(t *testing.T, context spec.G, it spec.S) {
 				it("returns an error", func() {
 					err := process.Run(modulesDir, cacheDir, workingDir, "", true)
 					Expect(buffer.String()).To(ContainLines(
-						fmt.Sprintf("    Running 'npm install --unsafe-perm --cache %s'", cacheDir),
+						fmt.Sprintf("    Running 'pnpm install --frozen-lockfile --store-dir %s/store --reporter=append-only'", cacheDir),
 						"      install error on stdout",
 						"      install error on stderr",
 					))
-					Expect(err).To(MatchError("npm install failed: failed to execute"))
+					Expect(err).To(MatchError("pnpm install failed: failed to execute"))
 				})
 			})
 		})

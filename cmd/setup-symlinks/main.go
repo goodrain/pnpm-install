@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/cmd/setup-symlinks/internal"
+	pnpminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/cmd/setup-symlinks/internal"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 		}
 	}
 
-	err := internal.Run(os.Args[0], projectPath, npminstall.NewLinkedModuleResolver(npminstall.NewLinker(os.TempDir())))
+	err := internal.Run(os.Args[0], projectPath, pnpminstall.NewLinkedModuleResolver(pnpminstall.NewLinker(os.TempDir())))
 	if err != nil {
 		log.Fatal(err)
 	}

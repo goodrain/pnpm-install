@@ -1,4 +1,4 @@
-package npminstall
+package pnpminstall
 
 import (
 	"bytes"
@@ -56,14 +56,16 @@ func (r BuildProcessResolver) Resolve(workingDir string) (BuildProcess, bool, er
 		return nil, false, err
 	}
 
-	packageLockPath := filepath.Join(workingDir, "package-lock.json")
-	locked, err := fs.Exists(packageLockPath)
+	// Check for pnpm-lock.yaml instead of package-lock.json
+	pnpmLockPath := filepath.Join(workingDir, PnpmLockfile)
+	locked, err := fs.Exists(pnpmLockPath)
 	if err != nil {
 		return nil, false, err
 	}
 
-	npmCachePath := filepath.Join(workingDir, "npm-cache")
-	cached, err := fs.Exists(npmCachePath)
+	// Check for pnpm store cache
+	pnpmCachePath := filepath.Join(workingDir, "pnpm-store")
+	cached, err := fs.Exists(pnpmCachePath)
 	if err != nil {
 		return nil, false, err
 	}
@@ -74,9 +76,9 @@ func (r BuildProcessResolver) Resolve(workingDir string) (BuildProcess, bool, er
 	}
 
 	inputsMap := scribe.FormattedMap{
-		"package-lock.json": wasItFound[locked],
-		"node_modules":      wasItFound[vendored],
-		"npm-cache":         wasItFound[cached],
+		"pnpm-lock.yaml": wasItFound[locked],
+		"node_modules":   wasItFound[vendored],
+		"pnpm-store":     wasItFound[cached],
 	}
 
 	r.logger.Subprocess("Process inputs:")
@@ -85,17 +87,17 @@ func (r BuildProcessResolver) Resolve(workingDir string) (BuildProcess, bool, er
 
 	switch {
 	case !locked && vendored, locked && vendored && !cached:
-		r.logger.Subprocess("Selected NPM build process: 'npm rebuild'")
+		r.logger.Subprocess("Selected PNPM build process: 'pnpm rebuild'")
 		r.logger.Break()
 		return r.rebuild, cached, nil
 
 	case !locked && !vendored:
-		r.logger.Subprocess("Selected NPM build process: 'npm install'")
+		r.logger.Subprocess("Selected PNPM build process: 'pnpm install'")
 		r.logger.Break()
 		return r.install, cached, nil
 
 	default:
-		r.logger.Subprocess("Selected NPM build process: 'npm ci'")
+		r.logger.Subprocess("Selected PNPM build process: 'pnpm install --frozen-lockfile'")
 		r.logger.Break()
 		return r.ci, cached, nil
 	}

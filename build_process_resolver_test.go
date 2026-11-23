@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/fakes"
+	pnpminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/fakes"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
 
@@ -24,7 +24,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 		install *fakes.BuildProcess
 		ci      *fakes.BuildProcess
 
-		resolver npminstall.BuildProcessResolver
+		resolver pnpminstall.BuildProcessResolver
 
 		buffer *bytes.Buffer
 	)
@@ -46,7 +46,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 		ci = &fakes.BuildProcess{}
 		ci.ShouldRunCall.Returns.Sha = "ci-sha"
 
-		resolver = npminstall.NewBuildProcessResolver(logger, rebuild, install, ci)
+		resolver = pnpminstall.NewBuildProcessResolver(logger, rebuild, install, ci)
 	})
 
 	it.After(func() {
@@ -54,7 +54,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("the build process is install", func() {
-		context("there is no node_modules, package-lock.json, or cache", func() {
+		context("there is no node_modules, pnpm-lock.yaml, or cache", func() {
 			it("returns the install process", func() {
 				buildProcess, cacheUsed, err := resolver.Resolve(workingDir)
 				Expect(err).NotTo(HaveOccurred())
@@ -62,13 +62,13 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 
 				Expect(buildProcess).To(Equal(install))
 
-				Expect(buffer.String()).To(ContainSubstring("Selected NPM build process: 'npm install'"))
+				Expect(buffer.String()).To(ContainSubstring("Selected PNPM build process: 'pnpm install'"))
 			})
 		})
 
-		context("there is no node_modules, package-lock.json but there is a cache", func() {
+		context("there is no node_modules, pnpm-lock.yaml but there is a cache", func() {
 			it.Before(func() {
-				Expect(os.MkdirAll(filepath.Join(workingDir, "npm-cache"), os.ModePerm)).To(Succeed())
+				Expect(os.MkdirAll(filepath.Join(workingDir, "pnpm-store"), os.ModePerm)).To(Succeed())
 			})
 
 			it("returns the install process", func() {
@@ -82,7 +82,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("the build process is rebuild", func() {
-		context("there is no package-lock.json or cache but there is node_modules", func() {
+		context("there is no pnpm-lock.yaml or cache but there is node_modules", func() {
 			it.Before(func() {
 				Expect(os.MkdirAll(filepath.Join(workingDir, "node_modules"), os.ModePerm)).To(Succeed())
 			})
@@ -94,15 +94,15 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 
 				Expect(buildProcess).To(Equal(rebuild))
 
-				Expect(buffer.String()).To(ContainSubstring("Selected NPM build process: 'npm rebuild'"))
+				Expect(buffer.String()).To(ContainSubstring("Selected PNPM build process: 'pnpm rebuild'"))
 			})
 		})
 
-		context("there is no package-lock.json but both node_modules and a cache are present", func() {
+		context("there is no pnpm-lock.yaml but both node_modules and a cache are present", func() {
 			it.Before(func() {
 				Expect(os.MkdirAll(filepath.Join(workingDir, "node_modules"), os.ModePerm)).To(Succeed())
 
-				Expect(os.MkdirAll(filepath.Join(workingDir, "npm-cache"), os.ModePerm)).To(Succeed())
+				Expect(os.MkdirAll(filepath.Join(workingDir, "pnpm-store"), os.ModePerm)).To(Succeed())
 			})
 
 			it("returns the rebuild process", func() {
@@ -114,11 +114,11 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 			})
 		})
 
-		context("there is no cache but node_modules and a package-lock.json are present", func() {
+		context("there is no cache but node_modules and a pnpm-lock.yaml are present", func() {
 			it.Before(func() {
 				Expect(os.MkdirAll(filepath.Join(workingDir, "node_modules"), os.ModePerm)).To(Succeed())
 
-				err := os.WriteFile(filepath.Join(workingDir, "package-lock.json"), []byte("some-content"), 0644)
+				err := os.WriteFile(filepath.Join(workingDir, "pnpm-lock.yaml"), []byte("some-content"), 0644)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -133,9 +133,9 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("the build process is ci", func() {
-		context("there is no node_modules or cache but there is a package-lock.json", func() {
+		context("there is no node_modules or cache but there is a pnpm-lock.yaml", func() {
 			it.Before(func() {
-				err := os.WriteFile(filepath.Join(workingDir, "package-lock.json"), []byte("some-content"), 0644)
+				err := os.WriteFile(filepath.Join(workingDir, "pnpm-lock.yaml"), []byte("some-content"), 0644)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -146,16 +146,16 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 
 				Expect(buildProcess).To(Equal(ci))
 
-				Expect(buffer.String()).To(ContainSubstring("Selected NPM build process: 'npm ci'"))
+				Expect(buffer.String()).To(ContainSubstring("Selected PNPM build process: 'pnpm install --frozen-lockfile'"))
 			})
 		})
 
-		context("there is no node_modules but the package-lock.json and cache are present", func() {
+		context("there is no node_modules but the pnpm-lock.yaml and cache are present", func() {
 			it.Before(func() {
-				err := os.WriteFile(filepath.Join(workingDir, "package-lock.json"), []byte("some-content"), 0644)
+				err := os.WriteFile(filepath.Join(workingDir, "pnpm-lock.yaml"), []byte("some-content"), 0644)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(os.MkdirAll(filepath.Join(workingDir, "npm-cache"), os.ModePerm)).To(Succeed())
+				Expect(os.MkdirAll(filepath.Join(workingDir, "pnpm-store"), os.ModePerm)).To(Succeed())
 			})
 
 			it("returns the ci process", func() {
@@ -167,14 +167,14 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 			})
 		})
 
-		context("the package-lock.json, node_modules, and cache are present", func() {
+		context("the pnpm-lock.yaml, node_modules, and cache are present", func() {
 			it.Before(func() {
 				Expect(os.MkdirAll(filepath.Join(workingDir, "node_modules"), os.ModePerm)).To(Succeed())
 
-				err := os.WriteFile(filepath.Join(workingDir, "package-lock.json"), []byte("some-content"), 0644)
+				err := os.WriteFile(filepath.Join(workingDir, "pnpm-lock.yaml"), []byte("some-content"), 0644)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(os.MkdirAll(filepath.Join(workingDir, "npm-cache"), os.ModePerm)).To(Succeed())
+				Expect(os.MkdirAll(filepath.Join(workingDir, "pnpm-store"), os.ModePerm)).To(Succeed())
 			})
 
 			it("returns the ci process", func() {
@@ -188,17 +188,17 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("output cases", func() {
-		context("when there is a package-lock.json", func() {
+		context("when there is a pnpm-lock.yaml", func() {
 			it.Before(func() {
-				err := os.WriteFile(filepath.Join(workingDir, "package-lock.json"), []byte("some-content"), 0644)
+				err := os.WriteFile(filepath.Join(workingDir, "pnpm-lock.yaml"), []byte("some-content"), 0644)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			it("outputs that package-lock.json was found", func() {
+			it("outputs that pnpm-lock.yaml was found", func() {
 				_, _, err := resolver.Resolve(workingDir)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(buffer.String()).To(MatchRegexp(`package-lock.json\s+-> "Found"`))
+				Expect(buffer.String()).To(MatchRegexp(`pnpm-lock.yaml\s+-> "Found"`))
 			})
 		})
 
@@ -207,7 +207,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 				Expect(os.MkdirAll(filepath.Join(workingDir, "node_modules"), os.ModePerm)).To(Succeed())
 			})
 
-			it("outputs that package-lock.json was found", func() {
+			it("outputs that pnpm-lock.yaml was found", func() {
 				_, _, err := resolver.Resolve(workingDir)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -217,20 +217,20 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 
 		context("when there is a node_modules directory", func() {
 			it.Before(func() {
-				Expect(os.MkdirAll(filepath.Join(workingDir, "npm-cache"), os.ModePerm)).To(Succeed())
+				Expect(os.MkdirAll(filepath.Join(workingDir, "pnpm-store"), os.ModePerm)).To(Succeed())
 			})
 
-			it("outputs that package-lock.json was found", func() {
+			it("outputs that pnpm-lock.yaml was found", func() {
 				_, _, err := resolver.Resolve(workingDir)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(buffer.String()).To(MatchRegexp(`npm-cache\s+-> "Found"`))
+				Expect(buffer.String()).To(MatchRegexp(`pnpm-store\s+-> "Found"`))
 			})
 		})
 	})
 
 	context("failure cases", func() {
-		var resolver npminstall.BuildProcessResolver
+		var resolver pnpminstall.BuildProcessResolver
 
 		it.Before(func() {
 			var err error
@@ -238,7 +238,7 @@ func testBuildProcessResolver(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 
 			logger := scribe.NewLogger(bytes.NewBuffer(nil))
-			resolver = npminstall.NewBuildProcessResolver(logger, rebuild, install, ci)
+			resolver = pnpminstall.NewBuildProcessResolver(logger, rebuild, install, ci)
 		})
 
 		it.After(func() {

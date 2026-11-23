@@ -1,4 +1,4 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	pnpminstall "github.com/goodrain/pnpm-install"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/fs"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
@@ -15,7 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
+func testUpdatePnpmCache(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 		buf    *bytes.Buffer
@@ -38,14 +38,14 @@ func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
 
 		workingDir, err = os.MkdirTemp("", "working-dir")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(os.MkdirAll(filepath.Join(workingDir, "npm-cache"), os.ModePerm)).To(Succeed())
-		Expect(os.WriteFile(filepath.Join(workingDir, "npm-cache", "some-file"), []byte("some-content"), os.ModePerm)).To(Succeed())
+		Expect(os.MkdirAll(filepath.Join(workingDir, "pnpm-store"), os.ModePerm)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(workingDir, "pnpm-store", "some-file"), []byte("some-content"), os.ModePerm)).To(Succeed())
 
-		workingDirSum, err = fs.NewChecksumCalculator().Sum(filepath.Join(workingDir, "npm-cache"))
+		workingDirSum, err = fs.NewChecksumCalculator().Sum(filepath.Join(workingDir, "pnpm-store"))
 		Expect(err).NotTo(HaveOccurred())
 
 		layers := packit.Layers{Path: layersDir}
-		cacheLayer, err = layers.Get("npm-cache")
+		cacheLayer, err = layers.Get("pnpm-store")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -54,10 +54,10 @@ func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.RemoveAll(workingDir)).To(Succeed())
 	})
 
-	context("UpdateNpmCacheLayer", func() {
+	context("UpdatePnpmCacheLayer", func() {
 		context("when cache layer is stale", func() {
 			it("updates cache layer", func() {
-				layer, err := npminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
+				layer, err := pnpminstall.UpdatePnpmCacheLayer(logger, workingDir, cacheLayer)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(layer.Metadata).To(HaveKeyWithValue("cache_sha", workingDirSum))
 				Expect(buf.String()).NotTo(ContainSubstring("Reusing cached layer"))
@@ -75,7 +75,7 @@ func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
 				}
 			})
 			it("reuses the layer", func() {
-				layer, err := npminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
+				layer, err := pnpminstall.UpdatePnpmCacheLayer(logger, workingDir, cacheLayer)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(layer.Metadata).To(HaveKeyWithValue("cache_sha", workingDirSum))
 				Expect(buf.String()).To(ContainSubstring("Reusing cached layer"))
@@ -83,7 +83,7 @@ func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		context("failure casees", func() {
-			context("npm-cache is unreadable", func() {
+			context("pnpm-store is unreadable", func() {
 				it.Before(func() {
 					Expect(os.Chmod(workingDir, 0000)).To(Succeed())
 				})
@@ -93,7 +93,7 @@ func testUpdateNpmCache(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					_, err = npminstall.UpdateNpmCacheLayer(logger, workingDir, cacheLayer)
+					_, err = pnpminstall.UpdatePnpmCacheLayer(logger, workingDir, cacheLayer)
 					Expect(err).To(MatchError(ContainSubstring("permission denied")))
 				})
 			})

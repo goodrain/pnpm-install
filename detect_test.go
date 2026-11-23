@@ -1,11 +1,11 @@
-package npminstall_test
+package pnpminstall_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	pnpminstall "github.com/goodrain/pnpm-install"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/sclevine/spec"
 
@@ -23,6 +23,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 	it.Before(func() {
 		workingDir = t.TempDir()
+		Expect(os.WriteFile(filepath.Join(workingDir, "pnpm-lock.yaml"), nil, 0600)).To(Succeed())
 		filePath = filepath.Join(workingDir, "package.json")
 		Expect(os.WriteFile(filePath, []byte(`{
 			"engines": {
@@ -32,7 +33,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		t.Setenv("BP_NODE_PROJECT_PATH", "")
 
-		detect = npminstall.Detect()
+		detect = pnpminstall.Detect()
 	})
 
 	it("returns a plan that provides node_modules", func() {
@@ -42,21 +43,16 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result.Plan).To(Equal(packit.BuildPlan{
 			Provides: []packit.BuildPlanProvision{
-				{Name: npminstall.NodeModules},
+				{Name: pnpminstall.NodeModules},
+				{Name: pnpminstall.Npm},
 			},
 			Requires: []packit.BuildPlanRequirement{
 				{
-					Name: npminstall.Node,
-					Metadata: npminstall.BuildPlanMetadata{
+					Name: pnpminstall.Node,
+					Metadata: pnpminstall.BuildPlanMetadata{
 						Version:       "1.2.3",
 						VersionSource: "package.json",
 						Build:         true,
-					},
-				},
-				{
-					Name: npminstall.Npm,
-					Metadata: npminstall.BuildPlanMetadata{
-						Build: true,
 					},
 				},
 			},
@@ -77,18 +73,13 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
+					{Name: pnpminstall.Npm},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
-							Build: true,
-						},
-					},
-					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
@@ -110,44 +101,39 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		})
 	})
 
-	context("when $BP_NPM_INCLUDE_BUILD_PYTHON env variable is present", func() {
+	context("when $BP_PNPM_INCLUDE_BUILD_PYTHON env variable is present", func() {
 		it.Before(func() {
 			Expect(os.WriteFile(filePath, []byte(`{
 			}`), 0600)).To(Succeed())
 		})
 
 		it.After(func() {
-			Expect(os.Unsetenv("BP_NPM_INCLUDE_BUILD_PYTHON")).To(Succeed())
+			Expect(os.Unsetenv("BP_PNPM_INCLUDE_BUILD_PYTHON")).To(Succeed())
 		})
 
 		it("has been set to true, it should include cpython buildpack", func() {
-			Expect(os.Setenv("BP_NPM_INCLUDE_BUILD_PYTHON", "true")).To(Succeed())
+			Expect(os.Setenv("BP_PNPM_INCLUDE_BUILD_PYTHON", "true")).To(Succeed())
 			result, err := detect(packit.DetectContext{
 				WorkingDir: workingDir,
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
+					{Name: pnpminstall.Npm},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
 					{
-						Name: npminstall.Cpython,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Cpython,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build:  true,
 							Launch: false,
-						},
-					},
-					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
-							Build: true,
 						},
 					},
 				},
@@ -156,7 +142,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("has no value, it should include cpython buildpack", func() {
-			Expect(os.Setenv("BP_NPM_INCLUDE_BUILD_PYTHON", "")).To(Succeed())
+			Expect(os.Setenv("BP_PNPM_INCLUDE_BUILD_PYTHON", "")).To(Succeed())
 
 			result, err := detect(packit.DetectContext{
 				WorkingDir: workingDir,
@@ -164,26 +150,21 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
+					{Name: pnpminstall.Npm},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
 					{
-						Name: npminstall.Cpython,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Cpython,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build:  true,
 							Launch: false,
-						},
-					},
-					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
-							Build: true,
 						},
 					},
 				},
@@ -191,7 +172,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("has been set to false, it does not include cpython buildpack", func() {
-			Expect(os.Setenv("BP_NPM_INCLUDE_BUILD_PYTHON", "false")).To(Succeed())
+			Expect(os.Setenv("BP_PNPM_INCLUDE_BUILD_PYTHON", "false")).To(Succeed())
 
 			result, err := detect(packit.DetectContext{
 				WorkingDir: workingDir,
@@ -199,18 +180,13 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
+					{Name: pnpminstall.Npm},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
-							Build: true,
-						},
-					},
-					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},
@@ -219,7 +195,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("has been set to a random string, it does not include cpython buildpack", func() {
-			Expect(os.Setenv("BP_NPM_INCLUDE_BUILD_PYTHON", "random-string")).To(Succeed())
+			Expect(os.Setenv("BP_PNPM_INCLUDE_BUILD_PYTHON", "random-string")).To(Succeed())
 
 			result, err := detect(packit.DetectContext{
 				WorkingDir: workingDir,
@@ -227,18 +203,13 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{
 				Provides: []packit.BuildPlanProvision{
-					{Name: npminstall.NodeModules},
+					{Name: pnpminstall.NodeModules},
+					{Name: pnpminstall.Npm},
 				},
 				Requires: []packit.BuildPlanRequirement{
 					{
-						Name: npminstall.Node,
-						Metadata: npminstall.BuildPlanMetadata{
-							Build: true,
-						},
-					},
-					{
-						Name: npminstall.Npm,
-						Metadata: npminstall.BuildPlanMetadata{
+						Name: pnpminstall.Node,
+						Metadata: pnpminstall.BuildPlanMetadata{
 							Build: true,
 						},
 					},

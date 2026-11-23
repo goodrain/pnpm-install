@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
-	"github.com/paketo-buildpacks/npm-install/cmd/setup-symlinks/internal"
+	pnpminstall "github.com/goodrain/pnpm-install"
+	"github.com/goodrain/pnpm-install/cmd/setup-symlinks/internal"
 	"github.com/sclevine/spec"
 	"github.com/sclevine/spec/report"
 
@@ -28,7 +28,7 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 		executablePath string
 		appDir         string
 		tmpDir         string
-		resolver       npminstall.LinkedModuleResolver
+		resolver       pnpminstall.LinkedModuleResolver
 	)
 
 	it.Before(func() {
@@ -62,26 +62,23 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.MkdirAll(filepath.Join(appDir, "module-5"), os.ModePerm)).To(Succeed())
 		Expect(os.WriteFile(filepath.Join(appDir, "module-5", "index.js"), nil, 0400)).To(Succeed())
 
-		resolver = npminstall.NewLinkedModuleResolver(npminstall.NewLinker(tmpDir))
-		err = os.WriteFile(filepath.Join(appDir, "package-lock.json"), []byte(`{
+		resolver = pnpminstall.NewLinkedModuleResolver(pnpminstall.NewLinker(tmpDir))
+		err = os.WriteFile(filepath.Join(appDir, "pnpm-lock.yaml"), []byte(`{
 			"packages": {
 				"module-1": {
-					"resolved": "src/packages/module-1",
-					"link": true
+					"resolution": {"directory": "src/packages/module-1"}
 				},
 				"module-2": {
 					"resolved": "http://example.com/module-2.tgz"
 				},
 				"module-3": {
-					"resolved": "workspaces/example/module-3",
-					"link": true
+					"resolution": {"directory": "workspaces/example/module-3"}
 				},
 				"module-4": {
 					"resolved": "http://example.com/module-4.tgz"
 				},
 				"module-5": {
-					"resolved": "module-5",
-					"link": true
+					"resolution": {"directory": "module-5"}
 				}
 			}
 		}`), 0600)
@@ -96,7 +93,7 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("creates a symlink to the node_modules dir in the layer", func() {
-		err := resolver.Resolve(filepath.Join(appDir, "package-lock.json"), layerDir)
+		err := resolver.Resolve(filepath.Join(appDir, "pnpm-lock.yaml"), layerDir)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = internal.Run(executablePath, appDir, resolver)
@@ -113,7 +110,7 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("replaces it", func() {
-			err := resolver.Resolve(filepath.Join(appDir, "package-lock.json"), layerDir)
+			err := resolver.Resolve(filepath.Join(appDir, "pnpm-lock.yaml"), layerDir)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = internal.Run(executablePath, appDir, resolver)
@@ -132,7 +129,7 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("ensures the parent directory exists", func() {
-			err := resolver.Resolve(filepath.Join(appDir, "package-lock.json"), layerDir)
+			err := resolver.Resolve(filepath.Join(appDir, "pnpm-lock.yaml"), layerDir)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = internal.Run(executablePath, appDir, resolver)
@@ -146,7 +143,7 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 
 	context("when appDir contains workspace packages ", func() {
 		it("ensures symlinks to the layer exist at launch time", func() {
-			err := resolver.Resolve(filepath.Join(appDir, "package-lock.json"), layerDir)
+			err := resolver.Resolve(filepath.Join(appDir, "pnpm-lock.yaml"), layerDir)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = internal.Run(executablePath, appDir, resolver)
@@ -178,7 +175,7 @@ func testRun(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("ensures symlinks to the layer exists if the resolved path is missing", func() {
-			err := resolver.Resolve(filepath.Join(appDir, "package-lock.json"), layerDir)
+			err := resolver.Resolve(filepath.Join(appDir, "pnpm-lock.yaml"), layerDir)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = os.RemoveAll(filepath.Join(appDir, "module-5"))

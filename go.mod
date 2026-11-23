@@ -1,4 +1,4 @@
-module github.com/paketo-buildpacks/npm-install
+module github.com/goodrain/pnpm-install
 
 go 1.27.4
 
@@ -9,6 +9,7 @@ require (
 	github.com/paketo-buildpacks/occam v0.31.4
 	github.com/paketo-buildpacks/packit/v2 v2.26.0
 	github.com/sclevine/spec v1.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	npminstall "github.com/paketo-buildpacks/npm-install"
+	pnpminstall "github.com/goodrain/pnpm-install"
 
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/chronos"
@@ -24,7 +24,7 @@ func (s SBOMGenerator) Generate(path string) (sbom.SBOM, error) {
 }
 
 func main() {
-	environment, err := npminstall.ParseEnvironment(filepath.Join(os.Getenv("CNB_BUILDPACK_DIR"), "buildpack.toml"), os.Environ())
+	environment, err := pnpminstall.ParseEnvironment(filepath.Join(os.Getenv("CNB_BUILDPACK_DIR"), "buildpack.toml"), os.Environ())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,27 +35,27 @@ func main() {
 	emitter := scribe.NewEmitter(os.Stdout).WithLevel(logLevel)
 	logger := scribe.NewLogger(os.Stdout).WithLevel(logLevel)
 
-	npm := pexec.NewExecutable("npm")
+	pnpm := pexec.NewExecutable("pnpm")
 	checksumCalculator := fs.NewChecksumCalculator()
-	linker := npminstall.NewLinker(os.TempDir())
+	linker := pnpminstall.NewLinker(os.TempDir())
 
 	packit.Run(
-		npminstall.Detect(),
-		npminstall.Build(
+		pnpminstall.Detect(),
+		pnpminstall.Build(
 			draft.NewPlanner(),
-			npminstall.NewPackageManagerConfigurationManager(
+			pnpminstall.NewPackageManagerConfigurationManager(
 				servicebindings.NewResolver(),
 				emitter,
 				globalConfigPath,
 			),
-			npminstall.NewBuildProcessResolver(
+			pnpminstall.NewBuildProcessResolver(
 				logger,
-				npminstall.NewRebuildBuildProcess(npm, checksumCalculator, environment, logger),
-				npminstall.NewInstallBuildProcess(npm, environment, logger),
-				npminstall.NewCIBuildProcess(npm, checksumCalculator, environment, logger),
+				pnpminstall.NewRebuildBuildProcess(pnpm, checksumCalculator, environment, logger),
+				pnpminstall.NewInstallBuildProcess(pnpm, environment, logger),
+				pnpminstall.NewCIBuildProcess(pnpm, checksumCalculator, environment, logger),
 			),
-			npminstall.NewPruneBuildProcess(
-				npm,
+			pnpminstall.NewPruneBuildProcess(
+				pnpm,
 				environment,
 				logger,
 			),
@@ -64,7 +64,7 @@ func main() {
 			SBOMGenerator{},
 			linker,
 			environment,
-			npminstall.NewLinkedModuleResolver(linker),
+			pnpminstall.NewLinkedModuleResolver(linker),
 		),
 	)
 }
